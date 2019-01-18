@@ -7,7 +7,7 @@ It's also intended to be:
 
 * reasonably compact — by making heavy use of bit fields and eliminating some further redundancy, it represents each 5 – 8 character postcode with its associated easting, northing and (simplified) quality flag in just a smidgen over 6 bytes, so that the full data set of over 1.7m items occupies just under 10MB in the compiled binary
 
-* reasonably quick — binary searches are left, right and center)
+* reasonably quick — binary searches are left, right and center
 
 * reasonably solid — it has some built-in tests
 
