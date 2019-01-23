@@ -1,5 +1,6 @@
 
 .DS_Store
+outwardbboxes.csv
 postcodes/postcodes.data
 postcodes/postcodeDataTypes.h
 postcodesc

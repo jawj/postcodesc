@@ -1,9 +1,16 @@
 #! /usr/bin/env ruby
 
+# create packed data structs
+
+# run gen-bboxes.sh first if you need reverse lookup (location -> postcode) support, then:
+# ./gen-structs.rb /path/to/codepoint-open/csv/files
+
 puts "Opening, reading and parsing postcode files ..."
 
+csvspath = ARGV[0] || '.'
+
 pcs = []
-csvs = File.join(ARGV[0] || '.', '*.csv')
+csvs = File.join(csvspath, '*.csv')
 foundAny = false
 Dir[csvs].sort.each do |f|
   foundAny = true
@@ -26,6 +33,14 @@ if !foundAny
   puts "No CSVs found at location '#{csvs}'"
   exit 1
 end
+
+outwardbboxes = File.exist?('outwardbboxes.csv') ?
+  Hash[File.open('outwardbboxes.csv').each_line.map do |l|
+    outwardcode, originE, originN, sizeE, sizeN = l.split(',')
+    [outwardcode, [originE, originN, sizeE, sizeN].map(&:to_i)]
+  end] : nil
+
+puts ">> WARNING: no bounding boxes. Location -> postcode lookups will be unreliable. <<" if outwardbboxes.nil?
 
 puts "Mapping symbols to save space ..."
 
@@ -56,13 +71,14 @@ pcsByOutward = pcs.group_by { |p| p[:area] + p[:district] }; nil
 pcsByOutwardMapped = pcsByOutward.map do |outward, pcs| 
   area = pcs.first[:area]  # since we grouped on this, first == all
   district = pcs.first[:district]  # ditto
+  outwardCode = area + district
   outwardCodeMapped = applyMappings(
     district[1], district1Mapping,
     district[0], district0Mapping,
     area[1], area1Mapping,
     area[0], area0Mapping
   )
-  [outwardCodeMapped, pcs]
+  [outwardCode, outwardCodeMapped, pcs]
 end.sort_by { |p| p[0] }; nil  
 # this sort _should_ be unnecessary, but 
 # this can be checked like so: pcsByOutwardMapped.each_cons(2).all? { |a, b| a[0] < b[0] }
@@ -72,10 +88,16 @@ outwardLookup = []
 inwardLookup = []
 
 pcsByOutwardMapped.each do |p|
-  outwardCodeMapped, pcs = p
-  originE = pcs.map { |pc| pc[:e]}.min
-  originN = pcs.map { |pc| pc[:n]}.min
-  outwardLookup << [outwardCodeMapped, originE, originN, inwardCodesOffset]
+  outwardCode, outwardCodeMapped, pcs = p
+  if outwardbboxes.nil?
+    originE = pcs.map { |pc| pc[:e]}.min
+    originN = pcs.map { |pc| pc[:n]}.min
+    maxOffsetE = pcs.map { |pc| pc[:e]}.max - originE
+    maxOffsetN = pcs.map { |pc| pc[:n]}.max - originN
+  else
+    originE, originN, maxOffsetE, maxOffsetN = outwardbboxes[outwardCode]
+  end
+  outwardLookup << [outwardCodeMapped, originE, originN, maxOffsetE, maxOffsetN, inwardCodesOffset]
   inwardCodesOffset += pcs.count
 
   inwardPcsMapped = pcs.map do |pc| 
@@ -123,7 +145,9 @@ typedef struct {
   unsigned int codeMapped : #{bitsRequiredFor(outwardLookup.map { |ol| ol[0] }.max)};
   unsigned int originE : #{bitsRequiredFor(outwardLookup.map { |ol| ol[1] }.max)};
   unsigned int originN : #{bitsRequiredFor(outwardLookup.map { |ol| ol[2] }.max)};
-  unsigned int inwardCodesOffset : #{bitsRequiredFor(outwardLookup.map { |ol| ol[3] }.max)};
+  unsigned int maxOffsetE : #{bitsRequiredFor(outwardLookup.map { |ol| ol[3] }.max)};
+  unsigned int maxOffsetN : #{bitsRequiredFor(outwardLookup.map { |ol| ol[4] }.max)};
+  unsigned int inwardCodesOffset : #{bitsRequiredFor(outwardLookup.map { |ol| ol[5] }.max)};
 } PACKED OutwardCode;
 
 typedef struct {
