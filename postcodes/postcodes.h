@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <limits.h>
 
 typedef enum {
   PostcodeNotFound = 0,
@@ -38,10 +39,10 @@ typedef struct {
   PostcodeStatus status;
 } PostcodeEastingNorthing;
 
-
 PostcodeEastingNorthing eastingNorthingFromPostcodeComponents(const PostcodeComponents pcc);
+PostcodeComponents nearbyPostcodeComponentsFromEastingNorthing(const PostcodeEastingNorthing en);
+
 PostcodeComponents postcodeComponentsFromString(const char s[]);
 char* stringFromPostcodeComponents(const PostcodeComponents pcc);  // be sure to free(result) after use
-bool postcodeTest(const bool noisily);
 
 #endif /* postcodes_h */

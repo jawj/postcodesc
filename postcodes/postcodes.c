@@ -48,18 +48,17 @@ DEFINE_INDEXOFSTRUCT(OutwardCode, int, codeMapped)
 DEFINE_INDEXOFSTRUCT(InwardCode, int, codeMapped)
 
 
-int applyMappings(const int count, ...) {  // variadic args are (count) times: char c, int mappingLength, unsigned char* mapping
-  char c;
-  int mappingLength;
-  unsigned char* mapping;
+// forward lookup (postcode -> location)
+
+int intByMappingChars(const int count, ...) {  // variadic args are (count) times: char c, int mappingLength, unsigned char* mapping
   va_list args;
   va_start(args, count);
   int result = 0;
   int runningMaxProduct = 1;
   for (int i = 0; i < count; i ++) {
-    c = va_arg(args, int);  // type promotion means we take this as an int
-    mappingLength = va_arg(args, int);
-    mapping = va_arg(args, unsigned char*);
+    char c = va_arg(args, int);  // type promotion means we take this as an int
+    int mappingLength = va_arg(args, int);
+    unsigned char *mapping = va_arg(args, unsigned char *);
     size_t value = indexOfUnsignedChar(c, mapping, mappingLength);
     if (value == -1) {
       va_end(args);
@@ -72,25 +71,22 @@ int applyMappings(const int count, ...) {  // variadic args are (count) times: c
   return result;
 }
 
-
 PostcodeEastingNorthing eastingNorthingFromPostcodeComponents(const PostcodeComponents pcc) {
   PostcodeEastingNorthing en = (PostcodeEastingNorthing){0};
-  int outwardCodeMapped = applyMappings(4,
-                                        pcc.district1, LENGTH_OF(district1Mapping), district1Mapping,
-                                        pcc.district0, LENGTH_OF(district0Mapping), district0Mapping,
-                                        pcc.area1, LENGTH_OF(area1Mapping), area1Mapping,
-                                        pcc.area0, LENGTH_OF(area0Mapping), area0Mapping
-                                        );
+  int outwardCodeMapped = intByMappingChars(4,
+                                            pcc.district1, LENGTH_OF(district1Mapping), district1Mapping,
+                                            pcc.district0, LENGTH_OF(district0Mapping), district0Mapping,
+                                            pcc.area1, LENGTH_OF(area1Mapping), area1Mapping,
+                                            pcc.area0, LENGTH_OF(area0Mapping), area0Mapping);
   if (outwardCodeMapped == -1) return en;
   size_t ocIndex = indexOfOutwardCode(outwardCodeMapped, outwardCodes, LENGTH_OF(outwardCodes));
   if (ocIndex == -1) return en;
   OutwardCode oc = outwardCodes[ocIndex];
   
-  int inwardCodeMapped = applyMappings(3,
-                                       pcc.unit1, LENGTH_OF(unit1Mapping), unit1Mapping,
-                                       pcc.unit0, LENGTH_OF(unit0Mapping), unit0Mapping,
-                                       pcc.sector, LENGTH_OF(sectorMapping), sectorMapping
-                                       );
+  int inwardCodeMapped = intByMappingChars(3,
+                                           pcc.unit1, LENGTH_OF(unit1Mapping), unit1Mapping,
+                                           pcc.unit0, LENGTH_OF(unit0Mapping), unit0Mapping,
+                                           pcc.sector, LENGTH_OF(sectorMapping), sectorMapping);
   if (inwardCodeMapped == -1) return en;
   int inwardCodesCount = (ocIndex < LENGTH_OF(outwardCodes) - 1 ?
                           outwardCodes[ocIndex + 1].inwardCodesOffset :
@@ -105,6 +101,81 @@ PostcodeEastingNorthing eastingNorthingFromPostcodeComponents(const PostcodeComp
   return en;  // break here in Xcode 10.1 and check oc.originE in the debugger for a radar to file with Apple
 }
 
+
+// reverse lookup
+
+void charsByUnmappingInt(int mapped, int count, ...) {  // variadic args are (count) times: char* c, int mappingLength, unsigned char* mapping
+  va_list args;
+  for (int i = 0; i < count; i ++) {
+    va_start(args, count);
+    int maxProduct = 1;
+    unsigned char *mapping;
+    unsigned char *c;
+    for (int j = count - 1 - i; j >= 0; j --) {
+      c = va_arg(args, unsigned char *);
+      int mappingLength = va_arg(args, int);
+      mapping = va_arg(args, unsigned char *);
+      if (j > 0) maxProduct *= mappingLength;  // warning: your head a splode
+    }
+    size_t index = mapped / maxProduct;
+    mapped %= maxProduct;
+    *c = mapping[index];
+    va_end(args);
+  }
+}
+
+PostcodeComponents nearbyPostcodeComponentsFromEastingNorthing(const PostcodeEastingNorthing en) {
+  PostcodeComponents pcc = {0};
+  long minDSq = LONG_MAX;
+  int minDSqOutwardIndex = -1;
+  int minDSqInwardIndex = -1;
+
+  for (int ocIndex = 0, ocLen = LENGTH_OF(outwardCodes); ocIndex < ocLen; ocIndex ++) {
+    OutwardCode oc = outwardCodes[ocIndex];
+    if (en.e < oc.originE ||
+        en.n < oc.originN ||
+        en.e > oc.originE + oc.maxOffsetE ||
+        en.n > oc.originN + oc.maxOffsetN) continue;
+
+    int offsetE = en.e - oc.originE;
+    int offsetN = en.n - oc.originN;
+
+    int nextInwardCodesOffset = ocIndex < ocLen - 1 ? 
+      outwardCodes[ocIndex + 1].inwardCodesOffset : 
+      LENGTH_OF(inwardCodes);
+
+    for (int icIndex = oc.inwardCodesOffset; icIndex < nextInwardCodesOffset; icIndex ++) {
+      InwardCode ic = inwardCodes[icIndex];
+      int deltaE = offsetE - ic.offsetE;
+      int deltaN = offsetN - ic.offsetN;
+      long dSq = deltaE * deltaE + deltaN * deltaN;
+      if (dSq < minDSq) {
+        minDSq = dSq;
+        minDSqOutwardIndex = ocIndex;
+        minDSqInwardIndex = icIndex;
+      }
+    }
+  }
+
+  OutwardCode oc = outwardCodes[minDSqOutwardIndex];
+  InwardCode ic = inwardCodes[minDSqInwardIndex];
+
+  charsByUnmappingInt(oc.codeMapped, 4,
+                      &pcc.district1, LENGTH_OF(district1Mapping), district1Mapping,
+                      &pcc.district0, LENGTH_OF(district0Mapping), district0Mapping,
+                      &pcc.area1, LENGTH_OF(area1Mapping), area1Mapping,
+                      &pcc.area0, LENGTH_OF(area0Mapping), area0Mapping);
+  charsByUnmappingInt(ic.codeMapped, 3,
+                      &pcc.unit1, LENGTH_OF(unit1Mapping), unit1Mapping,
+                      &pcc.unit0, LENGTH_OF(unit0Mapping), unit0Mapping,
+                      &pcc.sector, LENGTH_OF(sectorMapping), sectorMapping);
+  char* str = stringFromPostcodeComponents(pcc);
+  printf("%s out %i in %i e %i n %i\n", str, oc.codeMapped, ic.codeMapped, oc.originE + ic.offsetE, oc.originN + ic.offsetN);
+  free(str);
+  return pcc;
+}
+
+// parsing and formatting
 
 PostcodeComponents postcodeComponentsFromString(const char s[]) {
   // note that this validates slightly more loosely than it could
@@ -163,7 +234,6 @@ PostcodeComponents postcodeComponentsFromString(const char s[]) {
   pcc.valid = true;
   return pcc;
 }
-
 
 char* stringFromPostcodeComponents(const PostcodeComponents pcc) {
   char *s;

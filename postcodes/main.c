@@ -9,8 +9,11 @@
 
 #include <stdbool.h>
 #include "postcodes.h"
+#include "postcodeTests.h"
 
 int main(int argc, const char *argv[]) {
+
+  PostcodeComponents tstpcc = nearbyPostcodeComponentsFromEastingNorthing((PostcodeEastingNorthing){530470, 105690, 0});
 
   if (argc == 2 && strcmp(argv[1], "test") == 0) {
     // with arg 'test', run tests
