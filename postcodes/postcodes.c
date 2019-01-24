@@ -124,8 +124,9 @@ void charsByUnmappingInt(int mapped, int count, ...) {  // variadic args are (co
   }
 }
 
-PostcodeComponents nearbyPostcodeComponentsFromEastingNorthing(const PostcodeEastingNorthing en) {
-  PostcodeComponents pcc = {0};
+NearbyPostcode nearbyPostcodeFromEastingNorthing(const PostcodeEastingNorthing en) {
+  NearbyPostcode np = {0};
+
   long minDSq = LONG_MAX;
   int minDSqOutwardIndex = -1;
   int minDSqInwardIndex = -1;
@@ -156,23 +157,29 @@ PostcodeComponents nearbyPostcodeComponentsFromEastingNorthing(const PostcodeEas
       }
     }
   }
+  
+  if (minDSqOutwardIndex == -1) return np;
 
   OutwardCode oc = outwardCodes[minDSqOutwardIndex];
   InwardCode ic = inwardCodes[minDSqInwardIndex];
-
+  
+  PostcodeComponents *pcc = &np.components;
   charsByUnmappingInt(oc.codeMapped, 4,
-                      &pcc.district1, LENGTH_OF(district1Mapping), district1Mapping,
-                      &pcc.district0, LENGTH_OF(district0Mapping), district0Mapping,
-                      &pcc.area1, LENGTH_OF(area1Mapping), area1Mapping,
-                      &pcc.area0, LENGTH_OF(area0Mapping), area0Mapping);
+                      &pcc->district1, LENGTH_OF(district1Mapping), district1Mapping,
+                      &pcc->district0, LENGTH_OF(district0Mapping), district0Mapping,
+                      &pcc->area1, LENGTH_OF(area1Mapping), area1Mapping,
+                      &pcc->area0, LENGTH_OF(area0Mapping), area0Mapping);
   charsByUnmappingInt(ic.codeMapped, 3,
-                      &pcc.unit1, LENGTH_OF(unit1Mapping), unit1Mapping,
-                      &pcc.unit0, LENGTH_OF(unit0Mapping), unit0Mapping,
-                      &pcc.sector, LENGTH_OF(sectorMapping), sectorMapping);
-  char* str = stringFromPostcodeComponents(pcc);
-  printf("%s out %i in %i e %i n %i\n", str, oc.codeMapped, ic.codeMapped, oc.originE + ic.offsetE, oc.originN + ic.offsetN);
-  free(str);
-  return pcc;
+                      &pcc->unit1, LENGTH_OF(unit1Mapping), unit1Mapping,
+                      &pcc->unit0, LENGTH_OF(unit0Mapping), unit0Mapping,
+                      &pcc->sector, LENGTH_OF(sectorMapping), sectorMapping);
+
+  np.en = (PostcodeEastingNorthing){
+      oc.originE + ic.offsetE,
+      oc.originN + ic.offsetN,
+      ic.sectorMean ? PostcodeSectorMeanOnly : PostcodeOK};
+
+  return np;
 }
 
 // parsing and formatting

@@ -39,8 +39,13 @@ typedef struct {
   PostcodeStatus status;
 } PostcodeEastingNorthing;
 
+typedef struct {
+  PostcodeComponents components;
+  PostcodeEastingNorthing en;
+} NearbyPostcode;
+
 PostcodeEastingNorthing eastingNorthingFromPostcodeComponents(const PostcodeComponents pcc);
-PostcodeComponents nearbyPostcodeComponentsFromEastingNorthing(const PostcodeEastingNorthing en);
+NearbyPostcode nearbyPostcodeFromEastingNorthing(const PostcodeEastingNorthing en);
 
 PostcodeComponents postcodeComponentsFromString(const char s[]);
 char* stringFromPostcodeComponents(const PostcodeComponents pcc);  // be sure to free(result) after use

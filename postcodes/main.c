@@ -13,8 +13,6 @@
 
 int main(int argc, const char *argv[]) {
 
-  PostcodeComponents tstpcc = nearbyPostcodeComponentsFromEastingNorthing((PostcodeEastingNorthing){530470, 105690, 0});
-
   if (argc == 2 && strcmp(argv[1], "test") == 0) {
     // with arg 'test', run tests
     bool passed = postcodeTest(true);
@@ -42,6 +40,23 @@ int main(int argc, const char *argv[]) {
     }
 
     printf("E %i  N %i%s\n", en.e, en.n, en.status == PostcodeSectorMeanOnly ? "  (sector mean)" : "");
+
+  } else if (argc == 3) {
+    // with two arguments, treat as a reverse lookup from E/N
+    char *dummy;
+    long e = strtol(argv[1], &dummy, 10);
+    long n = strtol(argv[2], &dummy, 10);
+    PostcodeEastingNorthing en = (PostcodeEastingNorthing){e, n};
+    NearbyPostcode np = nearbyPostcodeFromEastingNorthing(en);
+
+    if (np.en.status == PostcodeNotFound) {
+      puts("No postcode near that location");
+
+    } else {
+      char *pc = stringFromPostcodeComponents(np.components);
+      puts(pc);
+      free(pc);
+    }
 
   } else {
     // with any other arguments, show help text
