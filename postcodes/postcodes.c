@@ -16,8 +16,8 @@
 // binary searches using poor man's generics
 
 #define DEFINE_INDEXOF(T, TSUFFIX) \
-  size_t indexOf ## TSUFFIX(const T needle, const T haystack[], const int haystackLength) { \
-    size_t l = 0, r = haystackLength - 1, m; \
+  int indexOf ## TSUFFIX(const T needle, const T haystack[], const int haystackLength) { \
+    int l = 0, r = haystackLength - 1, m; \
     T v; \
     while (l <= r) { \
       m = (l + r) / 2; \
@@ -30,8 +30,8 @@
   }
 
 #define DEFINE_INDEXOFSTRUCT(THAYSTACK, TNEEDLE, NEEDLEMEMBER) \
-  size_t indexOf ## THAYSTACK(const TNEEDLE needle, const THAYSTACK haystack[], const int haystackLength) { \
-    size_t l = 0, r = haystackLength - 1, m; \
+  int indexOf ## THAYSTACK(const TNEEDLE needle, const THAYSTACK haystack[], const int haystackLength) { \
+    int l = 0, r = haystackLength - 1, m; \
     TNEEDLE v; \
     while (l <= r) { \
       m = (l + r) / 2; \
@@ -59,7 +59,7 @@ int intByMappingChars(const int count, ...) {  // variadic args are (count) time
     char c = va_arg(args, int);  // type promotion means we take this as an int
     int mappingLength = va_arg(args, int);
     unsigned char *mapping = va_arg(args, unsigned char *);
-    size_t value = indexOfUnsignedChar(c, mapping, mappingLength);
+    int value = indexOfUnsignedChar(c, mapping, mappingLength);
     if (value == -1) {
       va_end(args);
       return -1;
@@ -79,7 +79,7 @@ PostcodeEastingNorthing eastingNorthingFromPostcodeComponents(const PostcodeComp
                                             pcc.area1, LENGTH_OF(area1Mapping), area1Mapping,
                                             pcc.area0, LENGTH_OF(area0Mapping), area0Mapping);
   if (outwardCodeMapped == -1) return en;
-  size_t ocIndex = indexOfOutwardCode(outwardCodeMapped, outwardCodes, LENGTH_OF(outwardCodes));
+  int ocIndex = indexOfOutwardCode(outwardCodeMapped, outwardCodes, LENGTH_OF(outwardCodes));
   if (ocIndex == -1) return en;
   OutwardCode oc = outwardCodes[ocIndex];
   
@@ -91,13 +91,14 @@ PostcodeEastingNorthing eastingNorthingFromPostcodeComponents(const PostcodeComp
   int inwardCodesCount = (ocIndex < LENGTH_OF(outwardCodes) - 1 ?
                           outwardCodes[ocIndex + 1].inwardCodesOffset :
                           LENGTH_OF(inwardCodes)) - oc.inwardCodesOffset;
-  size_t icIndex = indexOfInwardCode(inwardCodeMapped, &inwardCodes[oc.inwardCodesOffset], inwardCodesCount);
+  int icIndex = indexOfInwardCode(inwardCodeMapped, &inwardCodes[oc.inwardCodesOffset], inwardCodesCount);
   if (icIndex == -1) return en;
   InwardCode ic = inwardCodes[oc.inwardCodesOffset + icIndex];
   
   en.e = oc.originE + ic.offsetE;
   en.n = oc.originN + ic.offsetN;
   en.status = ic.sectorMean ? PostcodeSectorMeanOnly : PostcodeOK;
+
   return en;  // break here in Xcode 10.1 and check oc.originE in the debugger for a radar to file with Apple
 }
 
@@ -115,9 +116,9 @@ void charsByUnmappingInt(int mapped, int count, ...) {  // variadic args are (co
       c = va_arg(args, unsigned char *);
       int mappingLength = va_arg(args, int);
       mapping = va_arg(args, unsigned char *);
-      if (j > 0) maxProduct *= mappingLength;  // warning: your head a splode
+      if (j > 0) maxProduct *= mappingLength;
     }
-    size_t index = mapped / maxProduct;
+    int index = mapped / maxProduct;
     mapped %= maxProduct;
     *c = mapping[index];
     va_end(args);
@@ -144,6 +145,18 @@ NearbyPostcode nearbyPostcodeFromEastingNorthing(const PostcodeEastingNorthing e
     int nextInwardCodesOffset = ocIndex < ocLen - 1 ? 
       outwardCodes[ocIndex + 1].inwardCodesOffset : 
       LENGTH_OF(inwardCodes);
+
+    /*
+    PostcodeComponents pcc = {0};
+    charsByUnmappingInt(oc.codeMapped, 4,
+                        &pcc.district1, LENGTH_OF(district1Mapping), district1Mapping,
+                        &pcc.district0, LENGTH_OF(district0Mapping), district0Mapping,
+                        &pcc.area1, LENGTH_OF(area1Mapping), area1Mapping,
+                        &pcc.area0, LENGTH_OF(area0Mapping), area0Mapping);
+    char *outw = stringFromPostcodeComponents(pcc);
+    printf("Evaluating %i codes in %s\n", nextInwardCodesOffset - oc.inwardCodesOffset, outw);
+    free(outw);
+    */
 
     for (int icIndex = oc.inwardCodesOffset; icIndex < nextInwardCodesOffset; icIndex ++) {
       InwardCode ic = inwardCodes[icIndex];
@@ -173,7 +186,9 @@ NearbyPostcode nearbyPostcodeFromEastingNorthing(const PostcodeEastingNorthing e
                       &pcc->unit1, LENGTH_OF(unit1Mapping), unit1Mapping,
                       &pcc->unit0, LENGTH_OF(unit0Mapping), unit0Mapping,
                       &pcc->sector, LENGTH_OF(sectorMapping), sectorMapping);
+  pcc->valid = true;
 
+  np.distance = sqrt((double)minDSq);
   np.en = (PostcodeEastingNorthing){
       oc.originE + ic.offsetE,
       oc.originN + ic.offsetN,
@@ -193,7 +208,7 @@ PostcodeComponents postcodeComponentsFromString(const char s[]) {
   char pc[7] = {0};  // 7 chars is the longest a valid postcode can be, and we don't need a terminal '\0'
   unsigned char lenPc = 0;
   char c;
-  size_t i;
+  int i;
   
   // copy s to pc, removing whitespace and transforming to uppercase
   for (i = 0; /* keep going */; i ++) {

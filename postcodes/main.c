@@ -8,6 +8,7 @@
 //
 
 #include <stdbool.h>
+#include <math.h>
 #include "postcodes.h"
 #include "postcodeTests.h"
 
@@ -21,9 +22,8 @@ int main(int argc, const char *argv[]) {
   } else if (argc == 2) {
     // with any other single argument, treat as a postcode
     PostcodeComponents pcc = postcodeComponentsFromString(argv[1]);
-    bool valid = pcc.valid;
-
-    if (! valid) {
+    
+    if (! pcc.valid) {
       puts("Not a postcode");
       return EXIT_FAILURE;
     }
@@ -46,27 +46,29 @@ int main(int argc, const char *argv[]) {
     char *dummy;
     long e = strtol(argv[1], &dummy, 10);
     long n = strtol(argv[2], &dummy, 10);
+
     PostcodeEastingNorthing en = (PostcodeEastingNorthing){e, n};
     NearbyPostcode np = nearbyPostcodeFromEastingNorthing(en);
 
-    if (np.en.status == PostcodeNotFound) {
+    if (! np.components.valid) {
       puts("No postcode near that location");
-
-    } else {
-      char *pc = stringFromPostcodeComponents(np.components);
-      puts(pc);
-      free(pc);
+      return EXIT_FAILURE;
     }
+
+    char *pc = stringFromPostcodeComponents(np.components);
+    printf("%s (%im from centroid)\n", pc, (int)round(np.distance));
+    free(pc);
 
   } else {
     // with any other arguments, show help text
     puts("postcodes.c -- https://github.com/jawj/postcodes.c -- Built " __DATE__ " " __TIME__ "\n"
          "\n"
-         "Parse, format and look up grid references for UK postcodes.\n"
+         "Parse, format and look up GB postcodes <-> grid references.\n"
          "\n"
          "Usage:\n"
-         "  postcodes test\n"
-         "  postcodes [postcode]  (note: postcodes that contain spaces must be quoted)\n"
+         "  postcodesc test  - run tests \n"
+         "  postcodesc POSTCODE  - look up location from postcode (note: quote postcode or omit spaces)\n"
+         "  postcodesc EASTING NORTHING  - look up postcode from location\n"
          "\n"
          "Derived from Ordnance Survey CodePoint Open data\n"
          "Contains OS data (C) Crown copyright and database right 2018\n"

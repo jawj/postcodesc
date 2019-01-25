@@ -9,12 +9,13 @@
 #ifndef postcodes_h
 #define postcodes_h
 
+#include <limits.h>
+#include <math.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <string.h>
-#include <limits.h>
 
 typedef enum {
   PostcodeNotFound = 0,
@@ -42,6 +43,7 @@ typedef struct {
 typedef struct {
   PostcodeComponents components;
   PostcodeEastingNorthing en;
+  double distance;
 } NearbyPostcode;
 
 PostcodeEastingNorthing eastingNorthingFromPostcodeComponents(const PostcodeComponents pcc);
