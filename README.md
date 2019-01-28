@@ -1,3 +1,4 @@
+# postcodes.c
 
 This is a C library (and simple command-line tool) that implements postcode lookups in Great Britain based on Ordnance Survey’s [CodePoint Open](https://www.ordnancesurvey.co.uk/business-and-government/products/code-point-open.html) data set.
 
