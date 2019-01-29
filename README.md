@@ -1,3 +1,4 @@
+# postcodes.c
 
 This is a C library (and simple command-line tool) that implements postcode lookups in Great Britain based on Ordnance Survey’s [CodePoint Open](https://www.ordnancesurvey.co.uk/business-and-government/products/code-point-open.html) data set.
 
@@ -7,7 +8,7 @@ It's also intended to be:
 
 * *reasonably compact* — each 5 – 8 character postcode with its associated easting, northing and (simplified) quality flag is stored in just a smidgen over 6 bytes, so that the full data set of over 1.7m items occupies under 10MB in the compiled binary (and standard `gzip` takes less than 10% off this)
 
-* *reasonably quick* — postcode -> location lookups make use of binary search left, right and center (as it were), while location -> postcode lookups use a simple bounding-box index on the ourward part
+* *reasonably quick* — postcode -> location lookups put binary search left, right and center (as it were), while location -> postcode lookups use a simple bounding-box index on the outward part
 
 * *reasonably solid* — tests are built in
 
