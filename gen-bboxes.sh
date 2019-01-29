@@ -16,8 +16,8 @@
 # expect to wait 30 - 60 mins
 
 
-CPODATADIR = "$1"
-BLDATADIR = "$2"
+CPODATADIR="$1"
+BLDATADIR="$2"
 
 echo "Creating database ..."
 
@@ -41,12 +41,12 @@ echo "Loading data ..."
 # - picks out postcode, easting and northing (cols 1, 3, 4)
 # - inserts into table cpo
 
-cat "${CPODATADIR}/*.csv" | \
+cat ${CPODATADIR}/*.csv | \
   xsv search --no-headers --invert-match --select 2 90 | \
   xsv select 1,3,4 | \
   psql -d codepointopen -c '\copy cpo from stdin csv'
 
-shp2pgsql -d -D -s 27700 "${BLDATADIR}/european_region_region.shp" euregions | psql -d codepointopen
+shp2pgsql -D -s 27700 "${BLDATADIR}/european_region_region.shp" euregions | psql -d codepointopen
 
 echo "Generating Voronoi polygons ..."
 
