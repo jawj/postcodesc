@@ -7,12 +7,18 @@
 //  Copyright (c) 2019 George MacKerron. All rights reserved.
 //
 
-#include <stdbool.h>
+#include <limits.h>
 #include <math.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "postcodes.h"
 #include "postcodeTests.h"
 
 int main(int argc, const char *argv[]) {
+  char pc[9];
 
   if (argc == 2 && strcmp(argv[1], "test") == 0) {
     // with arg 'test', run tests
@@ -28,9 +34,8 @@ int main(int argc, const char *argv[]) {
       return EXIT_FAILURE;
     }
 
-    char *formatted = stringFromPostcodeComponents(pcc);
-    puts(formatted);
-    free(formatted);
+    stringFromPostcodeComponents(pc, pcc);
+    puts(pc);
 
     PostcodeEastingNorthing en = eastingNorthingFromPostcodeComponents(pcc);
 
@@ -55,9 +60,8 @@ int main(int argc, const char *argv[]) {
       return EXIT_FAILURE;
     }
 
-    char *pc = stringFromPostcodeComponents(np.components);
+    stringFromPostcodeComponents(pc, np.components);
     printf("%s (%im from centroid)\n", pc, (int)round(np.distance));
-    free(pc);
 
   } else {
     // with any other arguments, show help text

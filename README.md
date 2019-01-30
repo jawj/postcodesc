@@ -24,7 +24,7 @@ CodePoint Open data are compiled into the binary, which therefore needs quarterl
     ./gen-structs.rb /path/to/codepoint-open/CSVs
 
     # compile the testing tool
-    gcc postcodes/*.c -std=gnu99 -D_GNU_SOURCE -Wall -Wno-missing-braces -O2 -o postcodesc
+    gcc postcodes/*.c -Wall -Wno-missing-braces -O2 -o postcodesc
 
     # try it
     ./postcodesc sw1a0aa
