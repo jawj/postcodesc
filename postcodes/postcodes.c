@@ -10,8 +10,6 @@
 #include "postcodes.data"
 
 #define LENGTH_OF(x) (sizeof (x) / sizeof *(x))
-#define ASPRINTF_OR_DIE(...) if (asprintf(__VA_ARGS__) < 0) exit(EXIT_FAILURE)
-
 
 // binary searches using poor man's generics
 
@@ -257,10 +255,8 @@ PostcodeComponents postcodeComponentsFromString(const char s[]) {
   return pcc;
 }
 
-char* stringFromPostcodeComponents(const PostcodeComponents pcc) {
-  char *s;
+int stringFromPostcodeComponents(char s[9], const PostcodeComponents pcc) {
   char area1str[] = { pcc.area1, '\0' };  // if area1 is null, this is a zero-length string, as desired
   char district1str[] = { pcc.district1, '\0' };  // ditto for district1
-  ASPRINTF_OR_DIE(&s, "%c%s%c%s %c%c%c", pcc.area0, area1str, pcc.district0, district1str, pcc.sector, pcc.unit0, pcc.unit1);
-  return s;
+  return sprintf(s, "%c%s%c%s %c%c%c", pcc.area0, area1str, pcc.district0, district1str, pcc.sector, pcc.unit0, pcc.unit1);
 }

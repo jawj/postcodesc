@@ -111,9 +111,7 @@ bool postcodeTest(const bool noisily) {
     actualPti.valid = pcc.valid;
     
     if (actualPti.valid) {
-      char* formatted = stringFromPostcodeComponents(pcc);
-      strcpy(actualPti.formatted, formatted);
-      free(formatted);
+      stringFromPostcodeComponents(actualPti.formatted, pcc);
       actualPti.en = eastingNorthingFromPostcodeComponents(pcc);
     }
     
@@ -129,7 +127,8 @@ bool postcodeTest(const bool noisily) {
     free(expectedStr);
     free(actualStr);
   }
-
+  
+  char actualStr[9];
   for (int i = 0, len = LENGTH_OF(reverseLookupTestItems); i < len; i++) {
     numTested++;
     PostcodeTestItem expectedPti = reverseLookupTestItems[i];
@@ -140,7 +139,7 @@ bool postcodeTest(const bool noisily) {
     }
     
     NearbyPostcode np = nearbyPostcodeFromEastingNorthing(expectedPti.en);
-    char *actualStr = stringFromPostcodeComponents(np.components);
+    stringFromPostcodeComponents(actualStr, np.components);
     bool testPassed = strcmp(expectedPti.formatted, actualStr) == 0;
     if (testPassed) numPassed ++;
 
@@ -148,8 +147,6 @@ bool postcodeTest(const bool noisily) {
       printf("Actual:   %s\n", actualStr);
       printf("%s\n\n", testPassed ? "PASSED" : "FAILED");
     }
-
-    free(actualStr);
   }
 
   bool allPassed = numTested == numPassed;

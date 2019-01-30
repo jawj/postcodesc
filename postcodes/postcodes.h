@@ -50,6 +50,6 @@ PostcodeEastingNorthing eastingNorthingFromPostcodeComponents(const PostcodeComp
 NearbyPostcode nearbyPostcodeFromEastingNorthing(const PostcodeEastingNorthing en);
 
 PostcodeComponents postcodeComponentsFromString(const char s[]);
-char* stringFromPostcodeComponents(const PostcodeComponents pcc);  // be sure to free(result) after use
+int stringFromPostcodeComponents(char s[9], const PostcodeComponents pcc);
 
 #endif /* postcodes_h */
