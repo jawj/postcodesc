@@ -6,6 +6,13 @@
 //  Copyright © 2019 George MacKerron. All rights reserved.
 //
 
+#include <limits.h>
+#include <math.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "postcodes.h"
 #include "postcodes.data"
 
@@ -105,11 +112,11 @@ PostcodeEastingNorthing eastingNorthingFromPostcodeComponents(const PostcodeComp
 
 void charsByUnmappingInt(int mapped, int count, ...) {  // variadic args are (count) times: char* c, int mappingLength, unsigned char* mapping
   va_list args;
+  unsigned char *mapping = NULL;
+  unsigned char *c = NULL;
   for (int i = 0; i < count; i ++) {
     va_start(args, count);
     int maxProduct = 1;
-    unsigned char *mapping;
-    unsigned char *c;
     for (int j = count - 1 - i; j >= 0; j --) {
       c = va_arg(args, unsigned char *);
       int mappingLength = va_arg(args, int);

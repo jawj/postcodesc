@@ -6,10 +6,20 @@
 //  Copyright © 2019 George MacKerron. All rights reserved.
 //
 
+#include <stdio.h>
+#include <string.h>
+
 #include "postcodeTests.h"
+#include "postcodes.h"
 
 #define LENGTH_OF(x) (sizeof (x) / sizeof *(x))
-#define ASPRINTF_OR_DIE(...) if (asprintf(__VA_ARGS__) < 0) exit(EXIT_FAILURE)
+
+typedef struct {
+  char input[16];  // space for some extra characters and spaces
+  bool valid;
+  char formatted[9]; // space for e.g. AA1A 1AA\0
+  PostcodeEastingNorthing en;
+} PostcodeTestItem;
 
 static const PostcodeTestItem postcodeTestItems[] = {
   // note -- format tests are unlikely to change but status tests could be broken
@@ -80,26 +90,27 @@ static const PostcodeTestItem reverseLookupTestItems[] = {  // we only use forma
   {"", true, "", {215000, 630000}},  // non-existent
 };
 
-char *stringFromPostcodeTestItem(PostcodeTestItem pti) { // be sure to free(result) after use
-  char *s;
+int stringFromPostcodeTestItem(char s[54], PostcodeTestItem pti) {
   if (pti.valid && pti.en.status != PostcodeNotFound) {
-    ASPRINTF_OR_DIE(&s, "%s  E %i  N %i%s", pti.formatted, pti.en.e, pti.en.n, pti.en.status == PostcodeSectorMeanOnly ? "  (sector mean)" : "");
+    // char s[54] allows for up to 11 digits for large negative E and N (plus \0 at end)
+    return sprintf(s, "%s  E %i  N %i%s", pti.formatted, pti.en.e, pti.en.n, pti.en.status == PostcodeSectorMeanOnly ? "  (sector mean)" : "");
   } else if (pti.valid) {
-    ASPRINTF_OR_DIE(&s, "%s  (not found)", pti.formatted);
+    return sprintf(s, "%s  (not found)", pti.formatted);
   } else {
-    ASPRINTF_OR_DIE(&s, "INVALID");
+    return sprintf(s, "INVALID");
   }
-  return s;
 }
 
 bool postcodeTest(const bool noisily) {
   short numTested = 0;
   short numPassed = 0;
+  char expectedStr[54];
+  char actualStr[54];
   
   for (int i = 0, len = LENGTH_OF(postcodeTestItems); i < len; i ++) {
     numTested ++;
     PostcodeTestItem expectedPti = postcodeTestItems[i];
-    char* expectedStr = stringFromPostcodeTestItem(expectedPti);
+    stringFromPostcodeTestItem(expectedStr, expectedPti);
     
     if (noisily) {
       printf("Input:    '%s'\n", expectedPti.input);
@@ -115,7 +126,7 @@ bool postcodeTest(const bool noisily) {
       actualPti.en = eastingNorthingFromPostcodeComponents(pcc);
     }
     
-    char* actualStr = stringFromPostcodeTestItem(actualPti);
+    stringFromPostcodeTestItem(actualStr, actualPti);
     bool testPassed = strcmp(expectedStr, actualStr) == 0;
     if (testPassed) numPassed ++;
     
@@ -123,12 +134,8 @@ bool postcodeTest(const bool noisily) {
       printf("Actual:   %s\n", actualStr);
       printf("%s\n\n", testPassed ? "PASSED" : "FAILED");
     }
-    
-    free(expectedStr);
-    free(actualStr);
   }
   
-  char actualStr[9];
   for (int i = 0, len = LENGTH_OF(reverseLookupTestItems); i < len; i++) {
     numTested++;
     PostcodeTestItem expectedPti = reverseLookupTestItems[i];
