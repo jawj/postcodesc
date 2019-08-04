@@ -3,15 +3,21 @@
 # create packed data structs
 
 # run gen-bboxes.sh first if you need reverse lookup (location -> postcode) support, then:
-# ./gen-structs.rb /path/to/codepoint-open/csv/files
+# ./gen-structs.rb /path/to/codepoint-open/folder
 
 puts "Opening, reading and parsing postcode files ..."
 
-csvspath = ARGV[0] || '.'
+
+cpopath = ARGV[0] || '.'
+
+metafile = File.join(cpopath, 'Doc', 'metadata.txt')
+metadata = File.read(metafile)
+dataSetVersionNumber = metadata.match(/^DATASET VERSION NUMBER: ([0-9.]+)/)[1]
+copyrightYear = metadata.match(/^COPYRIGHT DATE: ([0-9]{4})/)[1]
 
 pcs = []
-csvs = File.join(csvspath, '*.csv')
 foundAny = false
+csvs = File.join(cpopath, 'Data', 'CSV', '*.csv')
 Dir[csvs].sort.each do |f|
   foundAny = true
   File.open(f).each_line.sort.each do |l|
@@ -167,13 +173,17 @@ dataC = "//
 //  Created by George MacKerron on 14/01/2019.
 //  Copyright (c) 2019 George MacKerron. All rights reserved.
 // 
-//  Derived from Ordnance Survey CodePoint Open data
-//  Contains OS data (C) Crown copyright and database right 2018
-//  Contains Royal Mail data (C) Royal Mail copyright and database right 2018
-//  Contains National Statistics data (C) Crown copyright and database right 2018
+//  Derived from Ordnance Survey CodePoint Open data (version #{dataSetVersionNumber})
+//
+//  Contains OS data (C) Crown copyright and database right #{copyrightYear}
+//  Contains Royal Mail data (C) Royal Mail copyright and database right #{copyrightYear}
+//  Contains National Statistics data (C) Crown copyright and database right #{copyrightYear}
 //
 
 #include \"postcodeDataTypes.h\"
+
+static const char* dataSetVersionNumber = \"#{dataSetVersionNumber}\";
+static const char* dataSetCopyrightYear = \"#{copyrightYear}\";
 
 static const char area0Mapping[] = { #{area0Mapping.map{ |m| "'#{m == "\u0000" ? '\0' : m}'" }.join(',') } };
 static const char area1Mapping[] = { #{area1Mapping.map{ |m| "'#{m == "\u0000" ? '\0' : m}'" }.join(',') } };

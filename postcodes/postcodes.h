@@ -46,4 +46,7 @@ NearbyPostcode nearbyPostcodeFromEastingNorthing(const PostcodeEastingNorthing e
 PostcodeComponents postcodeComponentsFromString(const char s[]);
 int stringFromPostcodeComponents(char s[9], const PostcodeComponents pcc);
 
+const char* codePointVersionNumber(void);
+const char* codePointCopyrightYear(void);
+
 #endif /* postcodes_h */

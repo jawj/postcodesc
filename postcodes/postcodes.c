@@ -267,3 +267,11 @@ int stringFromPostcodeComponents(char s[9], const PostcodeComponents pcc) {
   char district1str[] = { pcc.district1, '\0' };  // ditto for district1
   return sprintf(s, "%c%s%c%s %c%c%c", pcc.area0, area1str, pcc.district0, district1str, pcc.sector, pcc.unit0, pcc.unit1);
 }
+
+const char* codePointVersionNumber() {
+  return dataSetVersionNumber;
+}
+
+const char* codePointCopyrightYear() {
+  return dataSetCopyrightYear;
+}

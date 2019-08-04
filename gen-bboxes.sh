@@ -11,7 +11,7 @@
 # Postgres / PostGIS (on Mac: get Postgres.app)
 
 # remember to start Postgres and export appropriate PATH for Postgres binaries, then run: 
-# ./gen-bboxes.sh /path/to/codepoint-open/csv/files /path/to/boundaryline/shapefiles
+# ./gen-bboxes.sh /path/to/codepoint-open/folder /path/to/boundaryline/shapefiles
 
 # expect to wait 30 - 60 mins
 
@@ -41,7 +41,7 @@ echo "Loading data ..."
 # - picks out postcode, easting and northing (cols 1, 3, 4)
 # - inserts into table cpo
 
-cat ${CPODATADIR}/*.csv | \
+cat ${CPODATADIR}/Data/CSV/*.csv | \
   xsv search --no-headers --invert-match --select 2 90 | \
   xsv select 1,3,4 | \
   psql -d codepointopen -c '\copy cpo from stdin csv'
