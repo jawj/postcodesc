@@ -41,7 +41,7 @@ echo "Loading data ..."
 # - picks out postcode, easting and northing (cols 1, 3, 4)
 # - inserts into table cpo
 
-cat ${CPODATADIR}/Data/CSV/*.csv | \
+cat "${CPODATADIR}"/Data/CSV/*.csv | \
   xsv search --no-headers --invert-match --select 2 90 | \
   xsv select 1,3,4 | \
   psql -d codepointopen -c '\copy cpo from stdin csv'

@@ -39,14 +39,18 @@ static const PostcodeTestItem postcodeTestItems[] = {
   {"AB998AB", true, "AB99 8AB", {394406, 802269, PostcodeOK}},
   {"AB998AF", true, "AB99 8AF", {394406, 802269, PostcodeOK}},
   {"ZE1 0AA", true, "ZE1 0AA", {447759, 1141280, PostcodeOK}},
-  {"ZE1 0AB", true, "ZE1 0AB", {447830, 1141252, PostcodeOK}},
+  {"ZE1 0AB", true, "ZE1 0AB", {447819, 1141255, PostcodeOK}},
   {"ZE3 9JY", true, "ZE3 9JY", {438498, 1112029, PostcodeOK}},
   {"ZE3 9JZ", true, "ZE3 9JZ", {438662, 1112122, PostcodeOK}},
 
   // test some sector means
   {"BN99 9AA", true, "BN99 9AA", {517706, 104201, PostcodeSectorMeanOnly}},
-  {"M29 8SQ", true, "M29 8SQ", {369594, 402199, PostcodeSectorMeanOnly}},
-  {"RH121BW", true, "RH12 1BW", {516494, 130512, PostcodeSectorMeanOnly}},
+  {"EH31 2BU", true, "EH31 2BU", {348578, 682888, PostcodeSectorMeanOnly}},
+  {"IG11 7RY", true, "IG11 7RY", {544665, 183684, PostcodeSectorMeanOnly}},
+
+  // and former sector means
+  {"RH12 1BW", true, "RH12 1BW", {517453, 130652, PostcodeOK}},
+  {"M29 8SQ", true, "M29 8SQ", {0, 0, PostcodeNotFound}},
 
   // test some valid formats that don't exist
   {"CR90 9SA", true, "CR90 9SA", {0, 0, PostcodeNotFound}},
