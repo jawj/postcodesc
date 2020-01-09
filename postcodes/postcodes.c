@@ -125,7 +125,7 @@ void charsByUnmappingInt(int mapped, int count, ...) {  // variadic args are (co
     }
     int index = mapped / maxProduct;
     mapped %= maxProduct;
-    *c = mapping[index];
+    if (mapping) *c = mapping[index];  // there's no way mapping is still NULL here, but the conditional gives clang some reassurance
     va_end(args);
   }
 }
