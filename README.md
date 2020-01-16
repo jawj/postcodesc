@@ -28,6 +28,7 @@ CodePoint Open data are compiled into the binary, which therefore needs quarterl
 
     # try it
     ./postcodesc sw1a0aa
+    ./postcodesc bn1
     ./postcodesc 530300 181600
     ./postcodesc test
     
