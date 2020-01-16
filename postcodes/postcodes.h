@@ -10,6 +10,7 @@
 #define postcodes_h
 
 #include <stdbool.h>
+#include "postcodeDataTypes.h"
 
 typedef enum {
   PostcodeNotFound = 0,
@@ -40,10 +41,11 @@ typedef struct {
   double distance;
 } NearbyPostcode;
 
+bool outwardCodeFromPostcodeComponents(OutwardCode *oc, const PostcodeComponents pcc);
 PostcodeEastingNorthing eastingNorthingFromPostcodeComponents(const PostcodeComponents pcc);
 NearbyPostcode nearbyPostcodeFromEastingNorthing(const PostcodeEastingNorthing en);
 
-PostcodeComponents postcodeComponentsFromString(const char s[]);
+PostcodeComponents postcodeComponentsFromString(const char s[], bool outwardOnly);
 int stringFromPostcodeComponents(char s[9], const PostcodeComponents pcc);
 
 const char* codePointVersionNumber(void);

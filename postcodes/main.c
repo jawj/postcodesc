@@ -27,7 +27,7 @@ int main(int argc, const char *argv[]) {
 
   } else if (argc == 2) {
     // with any other single argument, treat as a postcode
-    PostcodeComponents pcc = postcodeComponentsFromString(argv[1]);
+    PostcodeComponents pcc = postcodeComponentsFromString(argv[1], false);
     
     if (! pcc.valid) {
       puts("Not a postcode");

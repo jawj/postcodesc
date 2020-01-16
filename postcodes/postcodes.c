@@ -76,6 +76,19 @@ int intByMappingChars(const int count, ...) {  // variadic args are (count) time
   return result;
 }
 
+bool outwardCodeFromPostcodeComponents(OutwardCode *oc, const PostcodeComponents pcc) {
+  int outwardCodeMapped = intByMappingChars(4,
+                                            pcc.district1, LENGTH_OF(district1Mapping), district1Mapping,
+                                            pcc.district0, LENGTH_OF(district0Mapping), district0Mapping,
+                                            pcc.area1, LENGTH_OF(area1Mapping), area1Mapping,
+                                            pcc.area0, LENGTH_OF(area0Mapping), area0Mapping);
+  if (outwardCodeMapped == -1) return false;
+  int ocIndex = indexOfOutwardCode(outwardCodeMapped, outwardCodes, LENGTH_OF(outwardCodes));
+  if (ocIndex == -1) return 0;
+  *oc = outwardCodes[ocIndex];
+  return true;
+}
+
 PostcodeEastingNorthing eastingNorthingFromPostcodeComponents(const PostcodeComponents pcc) {
   PostcodeEastingNorthing en = (PostcodeEastingNorthing){0};
   int outwardCodeMapped = intByMappingChars(4,
@@ -204,13 +217,16 @@ NearbyPostcode nearbyPostcodeFromEastingNorthing(const PostcodeEastingNorthing e
 
 // parsing and formatting
 
-PostcodeComponents postcodeComponentsFromString(const char s[]) {
+PostcodeComponents postcodeComponentsFromString(const char s[], bool outwardOnly) {
   // note that this validates slightly more loosely than it could
   // -- e.g. it allows A-Z in the last two characters, not just the 20 characters that ever appear there --
   // so that it matches what most people will think is a potentially valid postcode
   
+  int minLength = outwardOnly ? 2 : 5;
+  int maxLength = minLength + 2;
+  
   PostcodeComponents pcc = (PostcodeComponents){0};
-  char pc[7] = {0};  // 7 chars is the longest a valid postcode can be, and we don't need a terminal '\0'
+  char pc[maxLength];  // we don't need a terminal '\0'
   unsigned char lenPc = 0;
   char c;
   int i;
@@ -220,21 +236,23 @@ PostcodeComponents postcodeComponentsFromString(const char s[]) {
     c = s[i];
     if (c == '\0') break;  // break out at end of string
     if (c == ' ' || c == '\t' || c == '\r' || c == '\n') continue;  // ignore whitespace
-    if (lenPc > 6) return pcc;  // too long (6 is the last position of a 7-digit code)
+    if (lenPc > maxLength - 1) return pcc;  // too long (n - 1 is the last position of an n-digit code)
     pc[lenPc++] = c >= 'a' && c <= 'z' ? c - ('a' - 'A') : c;  // homegrown toupper
   }
-  if (lenPc < 5) return pcc;  // too short
+  if (lenPc < minLength) return pcc;  // too short
   
-  // pick apart: inward
-  c = pc[--lenPc];
-  if (c < 'A' || c > 'Z') return pcc;  // unit1 is (roughly) A-Z
-  pcc.unit1 = c;
-  c = pc[--lenPc];
-  if (c < 'A' || c > 'Z') return pcc;  // unit0 is (roughly) A-Z
-  pcc.unit0 = c;
-  c = pc[--lenPc];
-  if (c < '0' || c > '9') return pcc;  // sector is 0-9
-  pcc.sector = c;
+  if (! outwardOnly) {
+    // pick apart: inward
+    c = pc[--lenPc];
+    if (c < 'A' || c > 'Z') return pcc;  // unit1 is (roughly) A-Z
+    pcc.unit1 = c;
+    c = pc[--lenPc];
+    if (c < 'A' || c > 'Z') return pcc;  // unit0 is (roughly) A-Z
+    pcc.unit0 = c;
+    c = pc[--lenPc];
+    if (c < '0' || c > '9') return pcc;  // sector is 0-9
+    pcc.sector = c;
+  }
   
   // pick apart: outward
   i = 0;
@@ -265,7 +283,10 @@ PostcodeComponents postcodeComponentsFromString(const char s[]) {
 int stringFromPostcodeComponents(char s[9], const PostcodeComponents pcc) {
   char area1str[] = { pcc.area1, '\0' };  // if area1 is null, this is a zero-length string, as desired
   char district1str[] = { pcc.district1, '\0' };  // ditto for district1
-  return sprintf(s, "%c%s%c%s %c%c%c", pcc.area0, area1str, pcc.district0, district1str, pcc.sector, pcc.unit0, pcc.unit1);
+  return sprintf(s, "%c%s%c%s%c%c%c%c",
+                 pcc.area0, area1str, pcc.district0, district1str,
+                 pcc.sector == '\0' ? '\0' : ' ',
+                 pcc.sector, pcc.unit0, pcc.unit1);
 }
 
 const char* codePointVersionNumber() {

@@ -84,6 +84,21 @@ static const PostcodeTestItem postcodeTestItems[] = {
   {"... ...", false, "", {0}},
 };
 
+static const PostcodeTestItem outwardOnlyTestItems[] = {
+  {" b n1 ", true, "BN1", {0, 0, PostcodeOK}},
+  {" b5 ", true, "B5", {0, 0, PostcodeOK}},
+  {"sy21\t", true, "SY21", {0, 0, PostcodeOK}},
+  {"\nwc2 a\t", true, "WC2A", {0, 0, PostcodeOK}},
+  {"xy1", true, "XY1", {0, 0, PostcodeNotFound}},
+  {"", false, "", {0}},
+  {"xxz", false, "", {0}},
+  {"90210", false, "", {0}},
+  {"..", false, "", {0}},
+  {".......", false, "", {0}},
+  {" \t ", false, "", {0}},
+  {"BN222", false, "", {0}},
+};
+
 static const PostcodeTestItem reverseLookupTestItems[] = {  // we only use formatted, easting and northing
   {"", true, "WC1A 2TA", {530300, 181600}},  // central London location in 16 outward bboxes
   {"", true, "BN1 9QQ", {534523, 109340}},  // University of Sussex
@@ -122,12 +137,43 @@ bool postcodeTest(const bool noisily) {
     }
     
     PostcodeTestItem actualPti = {0};
-    PostcodeComponents pcc = postcodeComponentsFromString(expectedPti.input);
+    PostcodeComponents pcc = postcodeComponentsFromString(expectedPti.input, false);
     actualPti.valid = pcc.valid;
     
     if (actualPti.valid) {
       stringFromPostcodeComponents(actualPti.formatted, pcc);
       actualPti.en = eastingNorthingFromPostcodeComponents(pcc);
+    }
+    
+    stringFromPostcodeTestItem(actualStr, actualPti);
+    bool testPassed = strcmp(expectedStr, actualStr) == 0;
+    if (testPassed) numPassed ++;
+    
+    if (noisily) {
+      printf("Actual:   %s\n", actualStr);
+      printf("%s\n\n", testPassed ? "PASSED" : "FAILED");
+    }
+  }
+  
+  for (int i = 0, len = LENGTH_OF(outwardOnlyTestItems); i < len; i ++) {
+    numTested ++;
+    PostcodeTestItem expectedPti = outwardOnlyTestItems[i];
+    stringFromPostcodeTestItem(expectedStr, expectedPti);
+    
+    if (noisily) {
+      printf("Input:    '%s'\n", expectedPti.input);
+      printf("Expected: %s\n", expectedStr);
+    }
+    
+    PostcodeTestItem actualPti = {0};
+    PostcodeComponents pcc = postcodeComponentsFromString(expectedPti.input, true);
+    actualPti.valid = pcc.valid;
+    
+    if (actualPti.valid) {
+      stringFromPostcodeComponents(actualPti.formatted, pcc);
+      OutwardCode oc = { 0 };
+      bool ocFound = outwardCodeFromPostcodeComponents(&oc, pcc);
+      actualPti.en = (PostcodeEastingNorthing){ .e = 0, .n = 0, .status = ocFound ? PostcodeOK : PostcodeNotFound };
     }
     
     stringFromPostcodeTestItem(actualStr, actualPti);
