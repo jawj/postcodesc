@@ -10,18 +10,21 @@
 # xsv (on Mac: brew install xsv)
 # Postgres / PostGIS (on Mac: get Postgres.app)
 
-# remember to start Postgres and export appropriate PATH for Postgres binaries, then run: 
-# ./gen-bboxes.sh /path/to/codepoint-open/folder /path/to/boundaryline/shapefiles
+# remember to start Postgres and export appropriate PATH for Postgres binaries, then run 
+# ./gen-bboxes.sh /path/to/codepoint-open/folder /path/to/boundaryline/folder --port=5432
+
+# 3rd arg: any connection options for createdb/psql/dropdb, quoted if any spaces included
 
 # expect to wait 30 - 60 mins
 
 
 CPODATADIR="$1"
 BLDATADIR="$2"
+PGCONNOPTS="$3"
 
 echo "Creating database ..."
 
-createdb codepointopen
+createdb codepointopen $PGCONNOPTS
 
 echo '
 create extension postgis;
@@ -31,7 +34,7 @@ create table cpo
 , e integer
 , n integer
 );
-' | psql -d codepointopen
+' | psql -d codepointopen $PGCONNOPTS
 
 echo "Loading data ..."
 
@@ -44,9 +47,9 @@ echo "Loading data ..."
 cat "${CPODATADIR}"/Data/CSV/*.csv | \
   xsv search --no-headers --invert-match --select 2 90 | \
   xsv select 1,3,4 | \
-  psql -d codepointopen -c '\copy cpo from stdin csv'
+  psql -d codepointopen -c '\copy cpo from stdin csv' $PGCONNOPTS
 
-shp2pgsql -D -s 27700 "${BLDATADIR}/european_region_region.shp" euregions | psql -d codepointopen
+shp2pgsql -D -s 27700 "${BLDATADIR}/Data/GB/european_region_region.shp" euregions | psql -d codepointopen $PGCONNOPTS
 
 echo "Generating Voronoi polygons ..."
 
@@ -65,7 +68,7 @@ create table cpo_vor as (
 );
 create index vor_idx on cpo_vor using gist(geom);
 analyze cpo_vor;
-' | psql -d codepointopen
+' | psql -d codepointopen $PGCONNOPTS
 
 echo "Creating GB outline ..."
 
@@ -73,7 +76,7 @@ echo '
 create table gbsimple as (
   select st_makevalid(st_simplifypreservetopology(st_union(st_buffer(geom, 500)), 250)) as geom from euregions
 );  -- takes 15m (st_makevalid should not be necessary, but it is)
-' | psql -d codepointopen
+' | psql -d codepointopen $PGCONNOPTS
 
 echo "Clipping Voronoi polygons to GB outline ..."
 
@@ -84,7 +87,7 @@ create table cpo_clipped as (
 );  -- the st_within check speeds this up hugely, but it still takes about 10m
 create index clipped_idx on cpo_clipped using gist(geom);
 analyze cpo_clipped;
-' | psql -d codepointopen
+' | psql -d codepointopen $PGCONNOPTS
 
 echo "Calculating bounding boxes ..."
 
@@ -116,14 +119,14 @@ create view csvdata as (
     n2 - n1 as sizeN
   from boxcoords
 );
-' | psql -d codepointopen
+' | psql -d codepointopen $PGCONNOPTS
 
 echo "Writing CSV data ..."
 
-psql -d codepointopen -c '\copy (select * from csvdata) to stdout csv' > outwardbboxes.csv
+psql -d codepointopen -c '\copy (select * from csvdata) to stdout csv' $PGCONNOPTS > outwardbboxes.csv
 
 echo "Dropping database ..."
 
-dropdb codepointopen
+dropdb codepointopen $PGCONNOPTS
 
 echo "Done."

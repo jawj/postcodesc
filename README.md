@@ -18,7 +18,7 @@ CodePoint Open data are compiled into the binary, which therefore needs quarterl
 
     # generate proper bounding boxes to support reverse lookups, location -> postcode
     # (this step is not required if you only need forward lookups, postcode -> location)
-    ./gen-bboxes.sh /path/to/codepoint-open/folder /path/to/boundaryline/shapefiles
+    ./gen-bboxes.sh /path/to/codepoint-open/folder /path/to/boundaryline/folder
     
     # generate C struct arrays, using bounding boxes if available
     ./gen-structs.rb /path/to/codepoint-open/folder
