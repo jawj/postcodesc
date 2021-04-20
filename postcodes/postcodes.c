@@ -84,7 +84,7 @@ bool outwardCodeFromPostcodeComponents(OutwardCode *oc, const PostcodeComponents
                                             pcc.area0, LENGTH_OF(area0Mapping), area0Mapping);
   if (outwardCodeMapped == -1) return false;
   int ocIndex = indexOfOutwardCode(outwardCodeMapped, outwardCodes, LENGTH_OF(outwardCodes));
-  if (ocIndex == -1) return 0;
+  if (ocIndex == -1) return false;
   *oc = outwardCodes[ocIndex];
   return true;
 }
