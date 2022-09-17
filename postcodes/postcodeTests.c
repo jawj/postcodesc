@@ -35,7 +35,7 @@ static const PostcodeTestItem postcodeTestItems[] = {
 
   // test some firsts and lasts (looking for off-by-one errors)
   {"AB101AB", true, "AB10 1AB", {394235, 806529, PostcodeOK}},
-  {"AB101AF", true, "AB10 1AF", {394181, 806429, PostcodeOK}},
+  {"AB101AF", true, "AB10 1AF", {394235,806529, PostcodeOK}},
   {"AB998AB", true, "AB99 8AB", {394406, 802269, PostcodeOK}},
   {"AB998AF", true, "AB99 8AF", {394406, 802269, PostcodeOK}},
   {"ZE1 0AA", true, "ZE1 0AA", {447759, 1141280, PostcodeOK}},
@@ -45,12 +45,12 @@ static const PostcodeTestItem postcodeTestItems[] = {
 
   // test some sector means
   {"BN99 9AA", true, "BN99 9AA", {517706, 104201, PostcodeSectorMeanOnly}},
-  {"EH31 2BU", true, "EH31 2BU", {348578, 682888, PostcodeSectorMeanOnly}},
 
   // and former sector means
-  {"IG11 7RY", true, "IG11 7RY", {544542, 183710, PostcodeOK}},
+  {"IG11 7RY", true, "IG11 7RY", {544606, 183713, PostcodeOK}},
   {"RH12 1BW", true, "RH12 1BW", {517453, 130652, PostcodeOK}},
-  {"M29 8SQ", true, "M29 8SQ", {371048, 401573, PostcodeOK}},
+  {"M29 8SQ", true, "M29 8SQ", {370996, 401558, PostcodeOK}},
+  {"EH31 2BU", true, "EH31 2BU", {348945, 683063, PostcodeOK}},
 
   // test some valid formats that don't exist
   {"CR90 9SA", true, "CR90 9SA", {0, 0, PostcodeNotFound}},
