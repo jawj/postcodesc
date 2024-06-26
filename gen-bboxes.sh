@@ -49,7 +49,7 @@ cat "${CPODATADIR}"/Data/CSV/*.csv | \
   xsv select 1,3,4 | \
   psql -d codepointopen -c '\copy cpo from stdin csv' $PGCONNOPTS
 
-shp2pgsql -D -s 27700 "${BLDATADIR}/Data/GB/european_region_region.shp" euregions | psql -d codepointopen $PGCONNOPTS
+shp2pgsql -D -s 27700 "${BLDATADIR}/Data/Supplementary_Country/country_region.shp" euregions | psql -d codepointopen $PGCONNOPTS
 
 echo "Generating Voronoi polygons ..."
 
