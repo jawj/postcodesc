@@ -289,10 +289,10 @@ int stringFromPostcodeComponents(char s[9], const PostcodeComponents pcc) {
                  pcc.sector, pcc.unit0, pcc.unit1);
 }
 
-const char* codePointVersionNumber() {
+const char* codePointVersionNumber(void) {
   return dataSetVersionNumber;
 }
 
-const char* codePointCopyrightYear() {
+const char* codePointCopyrightYear(void) {
   return dataSetCopyrightYear;
 }

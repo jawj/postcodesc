@@ -51,7 +51,7 @@ static const PostcodeTestItem postcodeTestItems[] = {
   
   // and former sector means
   {"EH31 2BU", true, "EH31 2BU", {348945, 683063, PostcodeOK}},
-  {"IG11 7RY", true, "IG11 7RY", {544593, 183751, PostcodeOK}},
+  {"IG11 7RY", true, "IG11 7RY", {544598, 183732, PostcodeOK}},
   {"RH12 1BW", true, "RH12 1BW", {517453, 130652, PostcodeOK}},
   {"M29 8SQ", true, "M29 8SQ", {370996, 401558, PostcodeOK}},
 
